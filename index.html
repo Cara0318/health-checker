@@ -166,7 +166,15 @@ textarea:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px 
 <div class="ft">本工具仅供参考，请结合最新法规与平台规则进行最终审核</div>
 </div></div>
 <script>
-var FIREBASE_CONFIG = null;
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDUq98i9GXtaZuJrqNEh8X-K2ETazPiafY",
+  authDomain: "health-checker-32761.firebaseapp.com",
+  projectId: "health-checker-32761",
+  storageBucket: "health-checker-32761.firebasestorage.app",
+  messagingSenderId: "14712659189",
+  appId: "1:14712659189:web:3b3ea579fdc8f37147f9bc",
+  measurementId: "G-KVN75LDF42"
+};
 var FIREBASE_READY = false;
 var FIRESTORE_DB = null;
 async function loadFirebaseSDK(){if(FIREBASE_READY||!FIREBASE_CONFIG)return FIREBASE_CONFIG?true:false;return new Promise(function(r){var s1=document.createElement("script");s1.src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js";s1.onload=function(){var s2=document.createElement("script");s2.src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js";s2.onload=function(){try{firebase.initializeApp(FIREBASE_CONFIG);FIRESTORE_DB=firebase.firestore();FIREBASE_READY=true;r(true)}catch(e){r(false)}};s2.onerror=function(){r(false)};document.body.appendChild(s2)};s1.onerror=function(){r(false)};document.body.appendChild(s1)})}
