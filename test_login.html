@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>违禁词检查 - 简化测试版</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0ece6;--surface:#faf8f5;--border:#ddd6cc;--text:#3d3730;--text2:#8a8078;--primary:#8a9e8b;--red:#c4706a;--green:#7a9e7a;--r:8px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+#loginOv{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.lc{background:var(--surface);border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(61,55,48,.06);border:1px solid var(--border)}
+.lc h1{font-size:18px;font-weight:700;color:var(--text);text-align:center}
+.lc .sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px}
+.lc label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:3px}
+.lc input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;background:#faf8f6;margin-bottom:10px;outline:none}
+.lc input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(138,158,139,.12)}
+.lc .btn{width:100%;padding:10px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;text-align:center;margin-top:2px}
+.lc .btn:hover{background:var(--ph)}
+.lc .err{color:var(--red);font-size:12px;text-align:center;min-height:18px;margin-top:6px}
+.lc .ok{color:var(--green);font-size:12px;text-align:center;min-height:18px;margin-top:6px}
+.lc .tab{display:flex;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.lc .tab div{flex:1;text-align:center;padding:8px 0;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent}
+.lc .tab div.on{color:var(--primary);border-bottom-color:var(--primary)}
+.lc .pane{display:none}.lc .pane.on{display:block}
+#app{display:none;min-height:100vh}
+.hd{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;text-align:center;position:relative}
+.hd h1{font-size:16px;font-weight:700}
+.hd .un{position:absolute;top:12px;left:14px;font-size:11px;color:var(--text2)}
+.ft{text-align:center;font-size:10px;color:#c5bdb5;padding:16px 12px}
+</style>
+</head>
+<body>
+<div id="loginOv"><div class="lc">
+<h1>违禁词检查</h1>
+<p class="sub">简化测试版 · 纯本地存储</p>
+<div class="tab"><div class="on" data-tab="login" onclick="swTab('login')">登录</div><div data-tab="reg" onclick="swTab('reg')">注册</div></div>
+<div class="err" id="le"></div><div class="ok" id="lo"></div>
+<div class="pane on" id="paneLogin">
+<label>卡号</label><input type="text" id="uc" placeholder="13位卡号" maxlength="13" onkeydown="if(event.key=='Enter')lu()">
+<label>密码</label><input type="password" id="up" onkeydown="if(event.key=='Enter')lu()">
+<button class="btn" onclick="lu()">登 录</button></div>
+<div class="pane" id="paneReg">
+<label>卡号</label><input type="text" id="rc" placeholder="13位卡号" maxlength="13" onkeydown="if(event.key=='Enter')rg()">
+<label>密码</label><input type="password" id="rp" placeholder="至少4位" onkeydown="if(event.key=='Enter')rg()">
+<button class="btn" onclick="rg()">注 册</button></div>
+</div></div>
+<div id="app">
+<div class="hd"><div class="un" id="unameDisplay"></div><h1>违禁词检查</h1></div>
+<div style="text-align:center;padding:40px;color:var(--text2)">
+<p>✅ 登录成功！功能开发中...</p>
+<button class="btn" style="margin-top:12px;padding:6px 16px;border:none;border-radius:5px;font-size:12px;cursor:pointer;background:var(--primary);color:#fff;font-family:inherit" onclick="lo()">退出登录</button>
+</div>
+<div class="ft">纯本地存储 · 无需网络</div>
+</div>
+<script>
+function swTab(t){
+  document.querySelectorAll(".tab div").forEach(function(e){e.classList.remove("on")});
+  document.querySelectorAll(".pane").forEach(function(e){e.classList.remove("on")});
+  document.querySelector(".tab div[data-tab='"+t+"']").classList.add("on");
+  document.getElementById("pane"+(t==="login"?"Login":"Reg")).classList.add("on");
+  document.getElementById("le").textContent="";
+  document.getElementById("lo").textContent="";
+}
+function gl(){try{return JSON.parse(localStorage.getItem('cu')||'{}')}catch(e){return{}}}
+function sl(u){localStorage.setItem('cu',JSON.stringify(u))}
+function hp(p){
+  try{
+    if(!window.crypto||!crypto.subtle) throw new Error('crypto不可用');
+    var e=new TextEncoder().encode(p);
+    return crypto.subtle.digest('SHA-256',e).then(function(b){
+      return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')
+    });
+  }catch(ex){
+    var h=0;for(var i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0}
+    return Promise.resolve(h.toString(16));
+  }
+}
+function doLogin(s){
+  localStorage.setItem('cs',s);
+  document.getElementById("loginOv").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("unameDisplay").textContent='卡号: '+s.substring(2);
+}
+function lo(){
+  if(!confirm('确定退出？'))return;
+  localStorage.removeItem('cs');
+  location.reload();
+}
+async function lu(){
+  var e=document.getElementById("le"),c=document.getElementById("uc").value.trim(),p=document.getElementById("up").value;
+  e.textContent="";
+  if(c.length!==13||!/^\d{13}$/.test(c)){e.textContent='卡号必须是13位数字';return}
+  try{
+    var us=gl(),u=us[c];
+    if(!u){e.textContent='该卡号未注册，请先注册';return}
+    var h=await hp(p);
+    if(h!==u.p){e.textContent='密码错误';return}
+    doLogin('u:'+c);
+  }catch(ex){e.textContent='系统错误: '+ex.message}
+}
+async function rg(){
+  var e=document.getElementById("le"),o=document.getElementById("lo"),c=document.getElementById("rc").value.trim(),p=document.getElementById("rp").value;
+  e.textContent="";o.textContent="";
+  if(c.length!==13||!/^\d{13}$/.test(c)){e.textContent='卡号必须是13位数字';return}
+  if(p.length<4){e.textContent='密码至少4位';return}
+  try{
+    var us=gl();
+    if(us[c]){e.textContent='该卡号已注册，请去登录';return}
+    us[c]={p:await hp(p),r:new Date().toISOString(),source:'用户注册'};
+    sl(us);
+    document.getElementById("rc").value="";
+    document.getElementById("rp").value="";
+    o.textContent='注册成功！请切换到登录页';
+  }catch(ex){e.textContent='系统错误: '+ex.message}
+}
+// 初始化
+(function(){
+  var cs=localStorage.getItem('cs');
+  if(cs&&cs.startsWith('u:')){doLogin(cs);return}
+  document.getElementById("loginOv").style.display="flex";
+})();
+</script>
+</body>
+</html>
