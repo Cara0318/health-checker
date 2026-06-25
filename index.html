@@ -1,0 +1,496 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大健康自媒体违禁词检查工具</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f4f6f9;--surface:#fff;--border:#e2e6ed;--text:#1a1d23;--text2:#5f6672;--primary:#0f7b6a;--red:#dc3545;--yellow:#d97706;--green:#059669;--r:8px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+
+/* Login */
+#loginOv{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#0f7b6a,#0d9488);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+#loginOv.hidden{display:none}
+#app{display:none}
+.lc{background:#fff;border-radius:12px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.lc h1{font-size:20px;font-weight:700;color:var(--primary);text-align:center;margin-bottom:4px}
+.lc p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px}
+.lc label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text)}
+.lc input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;transition:border .2s;margin-bottom:12px}
+.lc input:focus{outline:none;border-color:var(--primary)}
+.lc .btn{width:100%;padding:11px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;transition:background .15s;margin-top:4px}
+.lc .btn:hover{background:#0d6f60}
+.lc .err{color:var(--red);font-size:12px;text-align:center;min-height:18px;margin-bottom:4px}
+.lc .lnk{text-align:center;font-size:13px;margin-top:14px;color:var(--text2)}
+.lc .lnk a{color:var(--primary);cursor:pointer;text-decoration:none}
+.lc .lnk a:hover{text-decoration:underline}
+.lc .ok{color:var(--green);font-size:12px;text-align:center;min-height:18px;margin-bottom:4px}
+
+/* App */
+.hd{background:linear-gradient(135deg,#0f7b6a,#0d9488);color:#fff;padding:32px 24px 28px;text-align:center}
+.hd h1{font-size:24px;font-weight:700}
+.hd p{font-size:14px;opacity:.85;margin-top:6px}
+.w{max-width:960px;margin:0 auto;padding:20px 16px}
+.c{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.c h2{font-size:16px;font-weight:600;margin-bottom:14px}
+textarea{width:100%;min-height:200px;padding:14px;border:1px solid var(--border);border-radius:6px;font-size:14px;line-height:1.6;font-family:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:var(--primary)}
+.inf{font-size:12px;color:var(--text2);margin-top:6px;text-align:right}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .12s}
+.bp{background:var(--primary);color:#fff}.bp:hover{background:#0d6f60}
+.bo{background:transparent;border:1px solid var(--border);color:var(--text)}.bo:hover{background:var(--bg)}
+.s{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.s>div{text-align:center;padding:14px 8px;border-radius:6px;background:var(--bg)}
+.s .n{font-size:26px;font-weight:700}.s .l{font-size:12px;color:var(--text2);margin-top:2px}
+.z1 .n{color:var(--primary)}.z2 .n{color:var(--red)}.z3 .n{color:var(--yellow)}.z4 .n{color:var(--green)}
+.fl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fl button{padding:4px 12px;border-radius:14px;font-size:12px;border:1px solid var(--border);cursor:pointer;background:var(--surface);font-family:inherit}
+.fl .on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.it{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px}
+.it:last-child{border-bottom:none}
+.tg{flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;margin-top:2px}
+.t1{background:var(--red)}.t2{background:var(--yellow)}.t3{background:var(--green)}
+.wd{font-weight:600;color:var(--red)}.ct{font-size:12px;color:var(--text2);margin-left:8px}
+.tp{font-size:12px;color:var(--green);margin-top:4px}
+.hl{padding:14px;border:1px solid var(--border);border-radius:6px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.hl .r{background:#fecaca;color:var(--red);padding:1px 2px;border-radius:3px}
+.hl .y{background:#fef3c7;color:#92400e;padding:1px 2px;border-radius:3px}
+.ok{text-align:center;padding:24px;color:var(--green);font-weight:500}
+.ft{text-align:center;padding:20px 0 40px;font-size:12px;color:var(--text2)}
+.uinfo{position:absolute;top:12px;right:16px;color:#fff;font-size:12px;opacity:.85;cursor:pointer}
+.uinfo:hover{opacity:1;text-decoration:underline}
+.hd{position:relative}
+@media(max-width:640px){
+  .hd{padding:24px 16px 20px}.hd h1{font-size:20px}
+  .w{padding:12px 10px}.c{padding:14px}
+  textarea{min-height:150px}.s{grid-template-columns:repeat(3,1fr)}.s .n{font-size:20px}
+  .bar .btn{flex:1;justify-content:center}
+  .lc{padding:28px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- Login / Register -->
+<div id="loginOv">
+  <div class="lc" id="loginPanel">
+    <h1 id="lgTitle">🩺 违禁词检查</h1>
+    <p id="lgSub">大健康内容合规检测 · 团队内部工具</p>
+    <div class="err" id="lgErr"></div>
+    <div class="ok" id="lgOk"></div>
+    <label for="lgCard">国珍优惠卡号</label>
+    <input type="text" id="lgCard" placeholder="请输入13位优惠卡号" maxlength="13" inputmode="numeric">
+    <label for="lgPw">密码</label>
+    <input type="password" id="lgPw" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <label for="lgPw2" id="lgPw2Label" style="display:none">确认密码</label>
+    <input type="password" id="lgPw2" placeholder="再次输入密码" style="display:none" onkeydown="if(event.key==='Enter')doRegister()">
+    <button class="btn" id="lgBtn" onclick="doLogin()">登 录</button>
+    <div class="lnk" id="lgLnk"><a onclick="toggleMode()">没有账号？注册新用户</a></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+<div class="hd">
+  <h1>🩺 大健康违禁词检查</h1>
+  <p>适配大健康 / 保健 / 医美 / 食品行业的自媒体内容合规检测</p>
+  <div class="uinfo" id="uinfo" onclick="logout()"></div>
+</div>
+<div class="w">
+  <div class="c">
+    <h2>📝 输入内容</h2>
+    <textarea id="ta" placeholder="在此粘贴或输入你要检查的自媒体文案"></textarea>
+    <div class="inf">字数: <span id="cc">0</span> | Ctrl+Enter 快速检查</div>
+    <div class="bar">
+      <button class="btn bp" onclick="run()">🔍 开始检查</button>
+      <button class="btn bo" onclick="clr()">清空</button>
+      <button class="btn bo" onclick="demo()">示例文案</button>
+      <button class="btn bo" onclick="demo2()">PDF原文</button>
+    </div>
+  </div>
+  <div id="res" style="display:none">
+    <div class="c">
+      <div class="s">
+        <div class="z1"><div class="n" id="st0">0</div><div class="l">违禁词总数</div></div>
+        <div class="z2"><div class="n" id="st1">0</div><div class="l">禁用</div></div>
+        <div class="z3"><div class="n" id="st2">0</div><div class="l">慎用</div></div>
+        <div class="z4"><div class="n" id="st3">0</div><div class="l">建议替换</div></div>
+      </div>
+    </div>
+    <div class="c">
+      <h2>高亮预览</h2>
+      <div class="hl" id="hl"></div>
+    </div>
+    <div class="c">
+      <h2>详细结果</h2>
+      <div class="fl" id="fl"></div>
+      <div id="lst"></div>
+    </div>
+  </div>
+  <div class="ft">本工具仅供参考，请结合最新法规与平台规则进行最终审核。</div>
+</div>
+</div>
+
+<script>
+// ===== Auth =====
+var MODE = "login";
+
+function esc(s){
+  var d=document.createElement("div");d.textContent=s;return d.innerHTML
+}
+
+function toggleMode(){
+  var err=document.getElementById("lgErr"),ok=document.getElementById("lgOk");
+  err.textContent="";ok.textContent="";
+  if(MODE==="login"){
+    MODE="register";
+    document.getElementById("lgTitle").textContent="注册新用户";
+    document.getElementById("lgSub").textContent="使用国珍优惠卡号注册";
+    document.getElementById("lgPw2Label").style.display="block";
+    document.getElementById("lgPw2").style.display="block";
+    document.getElementById("lgBtn").textContent="注 册";
+    document.getElementById("lgBtn").onclick=doRegister;
+    document.getElementById("lgLnk").innerHTML='<a onclick="toggleMode()">已有账号？去登录</a>'
+  }else{
+    MODE="login";
+    document.getElementById("lgTitle").textContent="🩺 违禁词检查";
+    document.getElementById("lgSub").textContent="大健康内容合规检测 · 团队内部工具";
+    document.getElementById("lgPw2Label").style.display="none";
+    document.getElementById("lgPw2").style.display="none";
+    document.getElementById("lgBtn").textContent="登 录";
+    document.getElementById("lgBtn").onclick=doLogin;
+    document.getElementById("lgLnk").innerHTML='<a onclick="toggleMode()">没有账号？注册新用户</a>'
+  }
+}
+
+async function hashPw(pw){
+  var e=new TextEncoder().encode(pw);
+  var b=await crypto.subtle.digest("SHA-256",e);
+  return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")
+}
+
+function getUsers(){try{return JSON.parse(localStorage.getItem("ck_users")||"{}")}catch(e){return{}}}
+function saveUsers(u){localStorage.setItem("ck_users",JSON.stringify(u))}
+
+async function doRegister(){
+  var err=document.getElementById("lgErr"),ok=document.getElementById("lgOk");
+  err.textContent="";ok.textContent="";
+  var card=document.getElementById("lgCard").value.trim();
+  var pw=document.getElementById("lgPw").value;
+  var pw2=document.getElementById("lgPw2").value;
+  if(card.length!==13||!/^\d{13}$/.test(card)){err.textContent="优惠卡号必须是13位数字";return}
+  if(pw.length<4){err.textContent="密码至少4位";return}
+  if(pw!==pw2){err.textContent="两次密码不一致";return}
+  var users=getUsers();
+  if(users[card]){err.textContent="该卡号已注册，请直接登录";return}
+  var h=await hashPw(pw);
+  users[card]={pw:h,reg:new Date().toISOString()};
+  saveUsers(users);
+  ok.textContent="注册成功！请登录";
+  setTimeout(function(){
+    MODE="login";
+    document.getElementById("lgTitle").textContent="🩺 违禁词检查";
+    document.getElementById("lgSub").textContent="大健康内容合规检测 · 团队内部工具";
+    document.getElementById("lgPw2Label").style.display="none";
+    document.getElementById("lgPw2").style.display="none";
+    document.getElementById("lgBtn").textContent="登 录";
+    document.getElementById("lgBtn").onclick=doLogin;
+    document.getElementById("lgLnk").innerHTML='<a onclick="toggleMode()">没有账号？注册新用户</a>';
+    document.getElementById("lgPw").value="";
+  },1500)
+}
+
+async function doLogin(){
+  var err=document.getElementById("lgErr");
+  err.textContent="";
+  var card=document.getElementById("lgCard").value.trim();
+  var pw=document.getElementById("lgPw").value;
+  if(!card||!pw){err.textContent="请输入卡号和密码";return}
+  var users=getUsers();
+  var u=users[card];
+  if(!u){err.textContent="该卡号未注册，请先注册";return}
+  var h=await hashPw(pw);
+  if(h!==u.pw){err.textContent="密码错误";return}
+  localStorage.setItem("ck_session",card);
+  enterApp(card)
+}
+
+function enterApp(card){
+  document.getElementById("loginOv").classList.add("hidden");
+  document.getElementById("app").style.display="block";
+  document.getElementById("uinfo").textContent=card+" 退出"
+}
+
+function logout(){
+  if(confirm("确定退出登录？")){
+    localStorage.removeItem("ck_session");
+    location.reload()
+  }
+}
+
+// Auto login
+(function(){
+  var s=localStorage.getItem("ck_session");
+  if(s){
+    var users=getUsers();
+    if(users[s]){enterApp(s);return}
+  }
+})();
+
+// ===== 违禁词库 =====
+var D=[
+{k:'绝对化用语',s:'red',w:'最|第一|首个|首选|顶级|王者|冠军|万能|100%|百分百|零风险|绝对|唯一|永久|终身|全网|全国|全球|所有|全部|完全|任何|第一品牌|首创|独创|遥遥领先|绝无仅有|史无前例|空前绝后|登峰造极|举世无双|无人能及|国家级|最高级|最好|最佳|极佳|极致|完美|王牌|超级|行业第一|行业领先|销量第一|销量冠军|领导者|领导品牌|巅峰|天花板|无与伦比|无可替代|独一无二|效果最好|质量最好|品质最佳'.split('|')},
+{k:'治疗功效类',s:'red',w:'治疗|治愈|治愈率|根治|疗效|痊愈|康复|缓解症状|抗炎|消炎|抗菌|杀菌|抑菌|抗癌|抗肿瘤|抗病毒|抗过敏|抗衰老|排毒|解毒|消除|清除|抑制|激活|修复|再生|重建|恢复|提高免疫力|增强免疫力|调节免疫力|提升免疫力|改善体质|延年益寿|延缓衰老|逆转|防止|预防|防治|阻断|抵抗|降糖|降压|降脂|降尿酸|降三高|止痛|镇痛|止咳|化痰|平喘|通便|润肠|养胃|护肝|补肾|健脾|祛湿|活血|化瘀|开胃|消食|安神|助眠|催眠|消炎止痛|清热解毒|消肿|利尿|降火|祛火|排毒养颜|调理|调养|养护|保护|改善睡眠|改善皮肤|改善肠胃|辅助治疗|辅助改善|药用价值'.split('|')},
+{k:'疾病名词关联',s:'yellow',w:'高血压|糖尿病|癌症|恶性肿瘤|肿瘤|癌|失眠|抑郁症|焦虑症|神经衰弱|精神病|关节炎|风湿|类风湿|痛风|腰椎间盘突出|骨质增生|颈椎病|肩周炎|肝炎|脂肪肝|肝硬化|乙肝|肾虚|肾炎|肾病|便秘|腹泻|肠胃炎|胃炎|胃溃疡|胃病|心脏病|冠心病|心肌梗塞|心梗|脑梗|中风|偏瘫|脑血栓|骨质疏松|贫血|哮喘|气管炎|肺炎|白内障|青光眼|近视|老花眼|前列腺|妇科病|月经不调|痛经|肥胖症|甲亢|甲状腺|结节|湿疹|皮炎|癣|痘痘|痤疮|脱发|斑秃'.split('|')},
+{k:'安全功效类',s:'yellow',w:'无毒|无副作用|无任何副作用|安全无毒|纯天然|纯植物|纯中药|天然|绿色|无添加|不含化学|零添加|无刺激|不过敏|无激素|不含激素|不含防腐剂|不含添加剂|纯手工|古法|祖传|无污染|有机|生态|自然|不复发|不反弹|无依赖性|安全有效|安全可靠|放心使用|药食同源'.split('|')},
+{k:'专家机构背书',s:'red',w:'专家推荐|医生推荐|医师推荐|院长推荐|医院|临床|临床证明|临床验证|研究表明|研究发现|科学证明|科学验证|诺贝尔奖|诺贝尔|院士|医学会|国家认证|国家批准|国家专利|国家权威|国家检测|国家质量|国际认证|国际标准|国际领先|专利产品|专利技术|专利配方|CCTV|央视|卫视|电视台|获奖|金奖|银奖|一等奖|质量认证|原装进口|中国保健协会|中医药协会'.split('|')},
+{k:'药效暗示类',s:'red',w:'药|药物|药品|中药|西药|中成药|处方|疗程|服用|口服|用量|剂量|禁忌|不良反应|副作用|一日几次|饭前服用|饭后服用|遵医嘱|对症|对症下药|药效|见效|起效|速效|特效|替代药品|代替药物|临床用药|医药|处方药|一盒见效'.split('|')},
+{k:'保健食品违规',s:'yellow',w:'保健食品|保健品|营养品|滋补品|补充剂|膳食补充剂|营养素|替代|代替|代餐|减肥|瘦身|减脂|燃脂|溶脂|排油|阻断|阻油|断糖|抗糖|饱腹|代餐食品|能量代餐|养生|滋补|进补|调补|清理肠道|清肠|排宿便|洗肠|纤体|塑身|美体|瘦腰|收腹|不节食|不运动|轻松瘦|躺着瘦|快速减肥|急速瘦身|7天瘦|月瘦|吃出|喝出|补出|反弹'.split('|')},
+{k:'医美化妆品违规',s:'yellow',w:'美白|祛斑|去斑|淡斑|祛痘|去痘|除皱|去皱|抗皱|紧致|拉皮|嫩肤|焕肤|换肤|微整形|微整|整形|整容|隆鼻|丰胸|隆胸|抽脂|吸脂|溶脂针|瘦脸针|瘦腿针|除皱针|祛疤|去疤|除疤|淡疤|永久脱毛|激光脱毛|化妆品|护肤品|美容|护肤'.split('|')},
+{k:'承诺性用语',s:'red',w:'保证|承诺|包好|包治|包治愈|无效退款|无效退|不满意退款|免费试用|免费体验|免费领|免费送|点击领取|立即领取|马上领取|限时|限量|秒杀|抢购|疯抢|今天买|今日特价|最后一天|仅限今天|随时退款|随时退|无理由退货|全额退款|先试后买|先用后付|不满意退|买一送一|买二送一|免费赠送|概不退款|不退不换'.split('|')}
+];
+var U={
+最:'建议替换为【很】【非常】',第一:'建议替换为【领先】【优秀】',首个:'建议替换为【早期】【先行】',
+首选:'建议替换为【值得考虑】',顶级:'建议替换为【高品质】',王者:'建议替换为【优质】【出色】',
+冠军:'建议替换为【优秀】【领先】',万能:'删除或替换为【多场景适用】',
+百分百:'建议替换为具体数据',零风险:'建议替换为【降低风险】',绝对:'建议替换为【相对】【通常】',
+唯一:'建议替换为【少有】【难得】',永久:'建议替换为【长期】【持久】',终身:'建议替换为【长期】【持续】',
+全网:'需提供全网数据来源',全国:'需提供全国范围证明',全球:'需提供全球范围证明',
+所有:'建议替换为【多数】【大量】',全部:'建议替换为【多数】',完全:'建议替换为【大部分】',
+任何:'建议替换为【众多】【许多】',第一品牌:'建议替换为【知名品牌】',
+首创:'建议替换为【较早推出】',独创:'建议替换为【特色】【独特工艺】',
+遥遥领先:'建议替换为【保持优势】',绝无仅有:'建议替换为【较为少见】',
+史无前例:'建议替换为【近几年少见】',空前绝后:'需删除',登峰造极:'需删除',
+举世无双:'建议替换为【少见】【难得】',无人能及:'建议替换为【备受认可】',
+国家级:'需说明具体认证机构和标准',最高级:'需删除或替换为【高品质】',
+最好:'建议替换为【很好】【优秀】',最佳:'建议替换为【良好】【优秀】',
+极佳:'建议替换为【良好】【不错】',极致:'建议替换为【很好】【出色】',
+完美:'建议替换为【优质】【完善】',王牌:'建议替换为【优质产品】【主打】',
+超级:'建议替换为【非常】【特别】',行业第一:'需提供第三方数据',
+行业领先:'建议替换为【行业知名】',销量第一:'需提供第三方数据',
+销量冠军:'建议替换为【畅销产品】',领导者:'建议替换为【知名企业】',
+领导品牌:'建议替换为【知名品牌】',巅峰:'建议替换为【成熟阶段】',
+天花板:'建议替换为【标杆】【高水平】',无与伦比:'需删除',
+无可替代:'建议替换为【广受欢迎】',独一无二:'建议替换为【颇具特色】',
+效果最好:'建议替换为【效果良好】',质量最好:'建议替换为【质量可靠】',
+品质最佳:'建议替换为【品质优良】',
+治疗:'可替换为【关注】【调理】【呵护】',治愈:'食品/保健食品严禁使用,可替换为【改善】',
+治愈率:'严禁使用',根治:'严禁使用违反广告法,可替换为【改善】【缓解】',
+疗效:'保健食品不得宣传,可替换为【体验】【感受】',痊愈:'不得承诺痊愈,可替换为【恢复良好】',
+康复:'建议替换为【辅助改善】【状态提升】',缓解症状:'可替换为【舒适感提升】',
+抗炎:'可替换为【温和】【舒缓】',消炎:'可替换为【舒缓】【清凉】',
+抗菌:'可替换为【洁净】【清洁】',杀菌:'需消毒产品资质,可替换为【清洁】【净化】',
+抑菌:'可替换为【洁净】【清爽】',抗癌:'食品/保健食品严禁使用',
+抗肿瘤:'严禁使用',抗病毒:'严禁使用',抗过敏:'可替换为【温和配方】',
+抗衰老:'食品/保健食品不得宣传,可替换为【焕发活力】',
+排毒:'食品/保健食品严禁使用,可替换为【轻盈舒畅】',解毒:'严禁使用',
+消除:'可替换为【缓解】【减轻】',清除:'可替换为【帮助排出】',
+抑制:'可替换为【温和作用】',激活:'建议替换为【帮助】【焕活】',
+修复:'食品/保健食品建议替换为【帮助维持】【养护】',再生:'食品/保健食品不得使用',
+重建:'可替换为【改善】【提升】',恢复:'可替换为【调整】【改善】',
+提高免疫力:'建议替换为【有助于维持正常的免疫功能】',
+增强免疫力:'建议替换为【有助于维持正常的免疫功能】',
+调节免疫力:'建议替换为【有助于维持正常的免疫功能】',
+提升免疫力:'建议替换为【有助于维持正常的免疫功能】',
+改善体质:'建议替换为【注重日常养护】',
+延年益寿:'严禁使用,可替换为【健康生活】',延缓衰老:'需按批准功能表述',
+逆转:'严禁使用,可替换为【改善】【提升】',防止:'不得宣传预防疾病,可替换为【帮助维持】',
+预防:'不得宣传预防疾病,可替换为【关注】【注重】',
+防治:'严禁使用,可替换为【关注】【呵护】',阻断:'可替换为【减少】【降低】',
+抵抗:'可替换为【应对】【适应】',
+降糖:'可替换为【关注血糖】【合理饮食】',降压:'可替换为【关注血压】【健康生活】',
+降脂:'可替换为【关注血脂】【合理膳食】',降尿酸:'可替换为【关注指标】',
+降三高:'可替换为【关注健康指标】',止痛:'食品/保健食品不得使用',
+镇痛:'食品/保健食品不得使用',止咳:'可替换为【润喉】【舒缓】',
+化痰:'可替换为【润喉】【清爽】',平喘:'食品/保健食品不得使用',
+通便:'可替换为【润肠】【顺畅】',润肠:'建议保留但勿暗示治疗',
+养胃:'可替换为【温和配方】',护肝:'可替换为【注重养护】',
+补肾:'可替换为【注重调理】',健脾:'可替换为【温和调理】',
+祛湿:'可替换为【轻盈】【清爽】',化瘀:'需删除',
+开胃:'可替换为【美味可口】',消食:'可替换为【清爽】【舒畅】',
+安神:'可替换为【宁静】【放松】',助眠:'食品不得宣传,可替换为【放松身心】',
+催眠:'严禁使用,可替换为【放松】【舒缓】',消炎止痛:'食品/保健食品不得使用',
+清热解毒:'食品/保健食品不得使用',消肿:'食品/保健食品不得使用',
+利尿:'食品/保健食品不得使用',降火:'可替换为【清凉】【舒畅】',
+祛火:'可替换为【清凉】【舒畅】',排毒养颜:'食品/保健食品不得使用',
+调理:'建议替换为【注重】【关注】',调养:'建议替换为【日常养护】',
+养护:'建议保留|可用于正常语境',保护:'建议替换为【关注】【维护】',
+改善睡眠:'可替换为【有助于正常睡眠】',改善皮肤:'可替换为【有助于皮肤健康】',
+改善肠胃:'可替换为【有助于肠胃舒适】',辅助治疗:'严禁使用',
+辅助改善:'可替换为【日常调理】',药用价值:'食品不得宣传药用价值，可替换为【营养价值】【食材】',
+专家推荐:'不得使用专家名义,可替换为【广受用户认可】',
+医生推荐:'不得使用医生名义,可替换为【深受用户喜爱】',
+医师推荐:'不得使用医师名义,可替换为【用户好评】',院长推荐:'不得使用需删除',
+医院:'不得暗示医疗背景,可替换为【健康机构】',临床:'食品/保健食品不得使用',
+临床证明:'食品/保健食品不得使用',临床验证:'食品/保健食品不得使用',
+研究表明:'需提供具体引用来源',研究发现:'需提供具体出处',
+科学证明:'需提供权威证据',科学验证:'需提供权威证据',
+诺贝尔奖:'不得关联宣传',诺贝尔:'不得关联宣传',
+院士:'不得以院士名义宣传',医学会:'不得以医学会名义背书',
+国家认证:'需具体说明认证名称和机构',国家批准:'需说明批准文号',
+国家专利:'需标注专利号及类型',国家权威:'需具体说明',
+国家检测:'需说明检测机构和报告',国家质量:'需具体说明质量标准',
+国际认证:'需具体说明认证名称',国际标准:'需具体说明标准号',
+国际领先:'需提供国际对比依据',专利产品:'建议标注具体专利号',
+专利技术:'需标注专利号',专利配方:'需标注专利号',
+CCTV:'不得利用央视名义宣传',央视:'不得利用央视名义宣传',
+卫视:'不得利用卫视名义宣传',电视台:'不得利用电视台名义宣传',
+获奖:'需具体说明获奖名称和时间',金奖:'需具体说明奖项',
+银奖:'需具体说明奖项',一等奖:'需具体说明奖项',
+质量认证:'需具体说明认证',原装进口:'需提供进口报关证明',
+中国保健协会:'不得以协会名义背书',中医药协会:'不得以协会名义背书',
+药:'食品/保健食品不得暗示药用',药物:'食品/保健食品不得使用',
+药品:'食品/保健食品不得使用',中药:'食品不得宣传为中药',
+西药:'食品/保健食品不得使用',中成药:'食品/保健食品不得使用',
+处方:'食品/保健食品不得使用',疗程:'保健食品不得宣传疗程',
+服用:'建议替换为【食用】',口服:'建议替换为【食用】',
+用量:'建议替换为【建议摄入量】',剂量:'食品不得使用,建议替换为【建议用量】',
+禁忌:'食品不得使用药品用语',不良反应:'食品不得使用药品用语',
+副作用:'食品不得使用,可替换为【注意事项】',
+一日几次:'建议替换为【每日建议】',饭前服用:'建议替换为【饭前食用】',
+饭后服用:'建议替换为【饭后食用】',遵医嘱:'食品不得使用',
+对症:'食品/保健食品不得使用',对症下药:'食品/保健食品不得使用',
+药效:'食品/保健食品不得使用',见效:'建议替换为【感受】【体验】',
+起效:'建议替换为【感受】【体验】',速效:'严禁使用,可替换为【轻松体验】',
+特效:'严禁使用,可替换为【特色】【特别】',
+替代药品:'严禁使用,可替换为【日常选择】',代替药物:'严禁使用,可替换为【日常选择】',
+临床用药:'严禁使用',医药:'食品/保健食品不得使用',
+处方药:'严禁使用',一盒见效:'严禁使用,可替换为【持续使用】',
+保证:'建议替换为【致力于】【力求】',承诺:'避免绝对化承诺',
+包好:'严禁使用',包治:'严禁使用',包治愈:'严禁使用',
+无效退款:'保健食品不得承诺',无效退:'不得承诺',
+不满意退款:'需确保可实现',免费试用:'需注意广告法规定',
+免费体验:'需注意广告法规定',免费领:'需明确条件',
+免费送:'需明确条件',点击领取:'需注意诱导点击',
+立即领取:'需注意诱导点击',马上领取:'需注意诱导点击',
+限时:'需明确活动起止时间',限量:'需明确限量具体数量',
+秒杀:'注意价格促销合规',抢购:'避免虚假紧迫感',
+疯抢:'避免虚假紧迫感',今天买:'避免虚假紧迫感',
+今日特价:'需明确活动规则',最后一天:'需真实',
+仅限今天:'需真实',随时退款:'需确保可实现',
+随时退:'需确保可实现',无理由退货:'需符合消法规定',
+全额退款:'需确保可实现',先试后买:'需明确规则',
+先用后付:'需明确规则',不满意退:'需确保可实现',
+买一送一:'需明确规则和期限',买二送一:'需明确规则和期限',
+免费赠送:'需明确规则',概不退款:'违反消法规定需删除',
+不退不换:'违反消法规定需删除'
+};
+var L={red:'禁用',yellow:'慎用',green:'建议替换'};
+var DB=[];
+for(var i=0;i<D.length;i++){var c=D[i];for(var j=0;j<c.w.length;j++){DB.push({w:c.w[j],s:c.s,k:c.k})}}
+DB.sort(function(a,b){return b.w.length-a.w.length});
+function es(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function run(){
+  var ta=document.getElementById('ta'),text=ta.value;
+  if(!text.trim()){document.getElementById('res').style.display='none';return}
+  var h=[];
+  for(var i=0;i<DB.length;i++){
+    var e=DB[i],re=new RegExp(e.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m;
+    while((m=re.exec(text))!==null){h.push({w:m[0],x:m.index,s:e.s,k:e.k,g:U[e.w]||U[m[0].toLowerCase()]||''})}
+  }
+  h.sort(function(a,b){return a.x-b.x});
+  var d=[];
+  for(var i=0;i<h.length;i++){
+    var r=h[i],p=d[d.length-1];
+    if(p&&r.x>=p.x&&r.x<p.x+p.w.length){if(r.w.length>p.w.length)d[d.length-1]=r}
+    else d.push(r)
+  }
+  var t=d.length,rn=0,yn=0,gn=0;
+  for(var i=0;i<d.length;i++){if(d[i].s==='red')rn++;else if(d[i].s==='yellow')yn++;else gn++}
+  document.getElementById('st0').textContent=t;
+  document.getElementById('st1').textContent=rn;
+  document.getElementById('st2').textContent=yn;
+  document.getElementById('st3').textContent=gn;
+  document.getElementById('res').style.display='block';
+  var hl='',la=0;
+  for(var i=0;i<d.length;i++){
+    var r=d[i];
+    if(r.x<la)continue;
+    hl+=es(text.slice(la,r.x));
+    hl+='<span class="'+(r.s==='red'?'r':'y')+'">'+es(r.w)+'</span>';
+    la=r.x+r.w.length
+  }
+  hl+=es(text.slice(la));
+  document.getElementById('hl').innerHTML=hl||'<span style="color:var(--green)">&#10004; 未发现违禁词</span>';
+  var fb=document.getElementById('fl');
+  fb.innerHTML='<button class="on" onclick="sf(this,\'all\')">全部 ('+t+')</button>';
+  if(rn>0)fb.innerHTML+='<button onclick="sf(this,\'red\')">禁用 ('+rn+')</button>';
+  if(yn>0)fb.innerHTML+='<button onclick="sf(this,\'yellow\')">慎用 ('+yn+')</button>';
+  if(gn>0)fb.innerHTML+='<button onclick="sf(this,\'green\')">建议替换 ('+gn+')</button>';
+  if(t>0)fb.innerHTML+='<button onclick="raf()" style="background:var(--green);color:#fff;border-color:var(--green)">一键替换全部</button>';
+  var li=document.getElementById('lst');
+  if(d.length===0){li.innerHTML='<div class="ok">&#10004; 未发现违禁词，内容合规性良好</div>';return}
+  var hh='';
+  for(var i=0;i<d.length;i++){
+    var r=d[i],tc=r.s==='red'?'t1':r.s==='yellow'?'t2':'t3';
+    var sl=L[r.s]||r.s;
+    var sugText='';
+    if(r.g){
+      var m2=r.g.match(/【([^】]+)】/);
+      if(m2&&m2[1])sugText=m2[1];
+      else{var m3=r.g.match(/替换为【([^】]+)】/);if(m3&&m3[1])sugText=m3[1]}
+    }
+    var act='';
+    if(sugText)act=' <button class="rbtn" onclick="rf('+i+','+r.x+',\''+r.w.replace(/'/g,"\\'")+'\',\''+sugText.replace(/'/g,"\\'")+'\')">替换为'+es(sugText)+'</button>';
+    act=act.replace('class="rbtn"','class="rbtn rbg"');
+    var sh=r.g?'<div class="tp">'+es(r.g)+'</div>':'';
+    hh+='<div class="it" data-s="'+r.s+'"><span class="tg '+tc+'">'+sl+'</span><div><span class="wd">'+es(r.w)+'</span><span class="ct">'+r.k+'</span>'+sh+'<div>'+act+'</div></div></div>'
+  }
+  li.innerHTML=hh
+  window._rds=d
+}
+function sf(el,f){
+  var btns=document.querySelectorAll('#fl button');
+  for(var i=0;i<btns.length;i++)btns[i].className='';
+  el.className='on';
+  var items=document.querySelectorAll('#lst .it');
+  for(var i=0;i<items.length;i++)items[i].style.display=(f==='all'||items[i].getAttribute('data-s')===f)?'flex':'none'
+}
+function rf(idx,pos,word,sug){
+  var ta=document.getElementById('ta'),text=ta.value;
+  if(pos<0||pos>=text.length)return;
+  ta.value=text.slice(0,pos)+sug+text.slice(pos+word.length);
+  document.getElementById('cc').textContent=ta.value.length;
+  run()
+}
+function raf(){
+  var ta=document.getElementById('ta');
+  var d=window._rds||[];
+  var text=ta.value;
+  for(var i=d.length-1;i>=0;i--){
+    var r=d[i];
+    var sugText='';
+    if(r.g){
+      var m2=r.g.match(/【([^】]+)】/);
+      if(m2&&m2[1])sugText=m2[1]
+    }
+    if(!sugText)continue;
+    if(r.x<0||r.x>=text.length)continue;
+    text=text.slice(0,r.x)+sugText+text.slice(r.x+r.w.length);
+    for(var j=i-1;j>=0;j--){
+      if(d[j].x>r.x)d[j].x-=r.w.length-sugText.length
+    }
+  }
+  ta.value=text;
+  document.getElementById('cc').textContent=text.length;
+  run()
+}
+function clr(){
+  document.getElementById('ta').value='';document.getElementById('cc').textContent='0';document.getElementById('res').style.display='none'}
+function demo(){
+  var t='⭐ 这款产品是全网第一的纯天然健康饮品！采用祖传秘方和最新诺贝尔奖技术研制而成，100%纯植物提取，无任何副作用，可以根治高血压、糖尿病、失眠等多种慢性病。国家级专家推荐，纯中药配方，疗效显著。一盒见效，无效退款！不仅能增强免疫力，还能排毒养颜、延年益寿！现在购买限时抢购，今天下单买一送一，绝对是全国最受欢迎的健康产品！更神奇的是研究表明，长期使用可以抗癌抗衰老，帮助您修复身体恢复青春！纯手工古法制作，国家级品质认证，安全无毒无依赖，不复发不反弹。买二送一限时秒杀，错过今天就没有了！';
+  document.getElementById('ta').value=t;document.getElementById('cc').textContent=t.length;run()}
+function demo2(){
+  var t='2026 新时代的远景价值\n新时优品健康管理服务中心 0479馆\n\n主讲人\n愿景：让新时优品在全国遍地开花，实现旅居式创业\n\n16万亿大市场？我国大健康产业体量在2030年将超过16万亿元，成为中国的经济支柱产业之一。——《健康中国2030规划纲要》\n\n国家战略：健康中国 预防是最经济最有效的健康策略。从以治病为中心转变为以人民健康为中心。\n\n新时代---央企表率 国有企业特别是中央企业要作出表率\n\n全面中式健康调理方案 2020年公司牵头制定《健康管理保健服务规范》国家标准。这是非医疗领域健康管理保健服务唯一的国家标准。公司研发的脉诊仪、智能镜、耳穴仪、扶阳罐、五藏灸等5个健康监测、健康评估、健康干预设备以及免疫力调节、心脑血管保护、体重管理等综合健康解决方案。\n\n批准发布部门：国家中医药管理局 起草单位：新时代健康产业（集团）有限公司\n\n新时代健康产业集团简介 央企实力军工品质\n\n隶属关系图谱：国资委 -> 中国节能环保集团 -> 新时代健康产业集团\n\n中国节能环保集团：国资委管理的100家大型央企之一(排54位)，700多家下属企业分布全国30多个省市和全球110多个国家和地区\n\n中国新时代控股集团：由解放军总装备部转为民用，是军工企业\n\n新时代健康产业集团：成立于1995年，总部北京中关村。投资20亿元，6家子公司、31家分公司，3家国家高新技术企业。\n\n国资委的肯定：作为唯一一家以健康命名的中央企业，承担着为国家和人民解决吃得好、吃得健康的责任。倡导每个人是自己健康第一责任人的理念。\n\n责任与使命：国企+央企+军企，代表国家意志，践行国家策略\n\n中央企业最高荣誉：2019年中央企业先进集体和劳动模范表彰大会在人民大会堂举行\n\n烟台生产基地新园区约35万平方米，总投资超过8亿元，全部采用国际顶尖生产线。国家级绿色工厂。9大权威认证：保健食品GMP认证、ISO9001、HACCP、有机食品认证等。国家级实验室、6S品质保证、院士工作站。\n\n承担国家课题：十三五、十二五国家科技支撑计划。国家级项目7项涉航天海洋极地。国家专利320项。顶级学府合作。累计销售收入674.16亿元。\n\n04 新时优品商业模式 健康管理+特许加盟。新时优品是基于国家标准构建的非医疗性健康管理特许经营品牌。获商务部特许加盟连锁牌照。AI闭环：监测-评估-干预-解决方案-档案-服务。被誉为创业成功率最高的经营模式之一。千城万店百万健康顾问，2030年覆盖100%。\n\n国珍体系：30年市场检验，300多款产品。国珍松花粉：增强免疫力。\n\n松延膏：中华养生 根源抗衰\n\n案例反馈：女性40位失眠皮肤不好掉发腰酸月经不调症状改善明显。男性24位精力提升。白发转黑、生发、皮肤改善等案例。\n\n行业地位：中国抗衰老促进会理事单位\n\n体系3：扶阳罐。世界卫生组织与中国合作的第一个中医课题项目，获得多位国医大师的高度评价，国家二类医疗器械。能起到疏通经络、扶正固本、活血散瘀、舒筋理气等效果。武汉疫情期间被用于方舱医院给患者调理。\n\n中医设备矩阵：五藏灸、智能耳穴仪、脉诊仪等。科技赋能中医养生。\n\n未来愿景：非医疗性健康管理领域第一品牌（未来5-20年）';
+  document.getElementById('ta').value=t;document.getElementById('cc').textContent=t.length;run()}
+document.getElementById('ta').addEventListener('input',function(){document.getElementById('cc').textContent=this.value.length});
+document.getElementById('ta').addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run()}});
+</script>
+</body>
+</html>
